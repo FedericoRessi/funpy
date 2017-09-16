@@ -1,0 +1,9 @@
+# Python cahces and temporary files
+/.cache/
+/.tox/
+__pycache__/
+/*.egg-info/
+*.pyc
+
+# PyCharm
+/.idea/
