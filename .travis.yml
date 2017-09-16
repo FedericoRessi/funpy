@@ -1,0 +1,18 @@
+# This has been stoled from below:
+#  here https://docs.travis-ci.com/user/languages/python/
+
+language: python
+
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install -rtest/requirements.txt
+  - pip install -rrequirements.txt
+  - pip install .
+
+script:
+  - pytest test/
