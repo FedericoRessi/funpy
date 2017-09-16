@@ -10,9 +10,8 @@ python:
   - "3.6"
 
 install:
-  - pip install -U -rtest/requirements.txt coveralls
-  - pip install -U -rrequirements.txt
-  - pip install -U .
+  - pip install -rtest/requirements.txt coveralls
+  - pip install -U -rrequirements.txt .
 
 env:
   - VIRTUAL_ENV=. PYTHONPATH=.
