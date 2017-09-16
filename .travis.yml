@@ -15,4 +15,7 @@ install:
   - pip install .
 
 script:
-  - pytest test/
+  - pytest --cov=funpy
+
+
+after_success: coveralls --rcfile=.coveragerc
