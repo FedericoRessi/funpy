@@ -1,4 +1,3 @@
-Rentinking about numpy for functional programming and lazy computation
+[![Build Status](https://travis-ci.org/FedericoRessi/funpy.svg?branch=master)](https://travis-ci.org/FedericoRessi/funpy)
 
-
-PRIVATE MESSAGE FOR MR. Travis-CI: can you hear me?
+Renthinking about numpy for functional programming and lazy computation
