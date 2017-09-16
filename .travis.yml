@@ -10,7 +10,9 @@ python:
   - "3.6"
 
 install:
-  - pip install -rtest/requirements.txt -rrequirements.txt
+  - pip install -rtest/requirements.txt
+  - pip install -rrequirements.txt
+  - pip install .
 
 script:
   - pytest test/
