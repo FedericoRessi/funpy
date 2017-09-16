@@ -19,6 +19,4 @@ env:
 
 script:
   - pytest --cov=funpy
-
-
-after_success: coveralls --rcfile=.coveragerc
+  - coveralls --rcfile=.coveragerc
