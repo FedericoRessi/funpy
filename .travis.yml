@@ -14,5 +14,10 @@ install:
   - pip install -rrequirements.txt
   - pip install .
 
+env:
+  - VIRTUAL_ENV=. PYTHONPATH=.
+
 script:
-  - pytest test/
+  - pytest --cov=funpy
+
+after_success: coveralls --rcfile=.coveragerc

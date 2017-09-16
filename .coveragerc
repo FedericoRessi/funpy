@@ -1,0 +1,5 @@
+[run]
+omit = test/*
+branch = True
+data_file = ${VIRTUAL_ENV}/.coverage
+source = funpy

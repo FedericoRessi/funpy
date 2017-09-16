@@ -1,5 +1,6 @@
 # Python cahces and temporary files
 /.cache/
+/.coverage
 /.eggs/
 /.tox/
 /*.egg-info/
