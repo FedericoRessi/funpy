@@ -16,6 +16,7 @@ install:
 
 env:
   - VIRTUAL_ENV=.
+  - PYTHONPATH=.
 
 script:
   - pytest --cov=funpy
