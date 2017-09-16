@@ -19,6 +19,5 @@ env:
 
 script:
   - pytest --cov=funpy
-  - find . -name .coverage
 
 after_success: coveralls --rcfile=.coveragerc
