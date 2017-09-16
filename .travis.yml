@@ -10,14 +10,12 @@ python:
   - "3.6"
 
 install:
-  - pip install -rtest/requirements.txt
-  - pip install -rrequirements.txt
-  - pip install .
+  - pip install -rtest/requirements.txt coveralls
+  - pip install -U -rrequirements.txt .
 
 env:
   - VIRTUAL_ENV=. PYTHONPATH=.
 
 script:
   - pytest --cov=funpy
-
-after_success: coveralls --rcfile=.coveragerc
+  - coveralls --rcfile=.coveragerc
