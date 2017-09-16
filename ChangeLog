@@ -1,0 +1,11 @@
+CHANGES
+=======
+
+* Add build status to README.md
+* Install funpyt to test environment
+* Fix requirements specification
+* Rename travis file
+* Try weaking up Mr.Lazy-CI
+* Preparing travis recipe
+* Spare one line for README.md
+* Initial commit
