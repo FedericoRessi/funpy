@@ -3,7 +3,7 @@ from collections import namedtuple, OrderedDict
 from inspect import formatargspec, getargspec, getcallargs
 import logging
 
-from six import add_metaclass, viewkeys
+from six import add_metaclass
 
 
 LOG = logging.getLogger(__name__)
