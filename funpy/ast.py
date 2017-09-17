@@ -15,59 +15,6 @@ class ASTMeta(ABCMeta):
 
     def __new__(mcs, name, bases, members):
         class_name = members.get('class_name')
-        if class_name:
-            init_method = members.get('__init__')
-            if init_method:
-                if not callable(init_method):
-                    raise TypeError(
-                        'Expected a callable, got {!r}'.format(init_method))
-
-                spec = getargspec(init_method)
-                if spec.varargs or spec.keywords:
-                    raise TypeError(
-                        'Invalid signatores in {!r}, '
-                        'found varargs or keywords'.format(init_method))
-
-                # skip self parameter
-                params_cls = namedtuple(name + 'Params', spec.args[1:])
-                if spec.defaults:
-                    signature = formatargspec(
-                        args=spec.args[1:],  # skip self parameter
-                        defaults=spec.defaults)
-                    LOG.debug(
-                        "Extract variables from function signature:\n"
-                        "  %r", signature)
-
-                    scope = {}
-                    exec('def method{}: pass'.format(signature), scope)
-                    signature_method = scope['method']
-
-                    def make_params(*args, **kwargs):
-                        # LOG.debug('Make parameters:\n'
-                        #           '  args: %r'
-                        #           '  kwargs: %r'
-                        #           '  signature: %r',
-                        #           args, kwargs, signature)
-                        return params_cls(
-                            **getcallargs(signature_method, *args, **kwargs))
-
-                else:
-                    def make_params(*args, **kwargs):
-                        return params_cls(*args, **kwargs)
-            else:
-                def make_params(*args):
-                    return args
-
-            def __init__(self, inject, *args, **kwargs):
-                self.inject = inject
-                self.params = make_params(*args, **kwargs)
-                if init_method:
-                    init_method(self, *args, **kwargs)
-
-            members['__init__'] = __init__
-            members['inject'] = None
-            members['params'] = None
-
         cls = ABCMeta.__new__(mcs, name, bases, members)
         if class_name:
             mcs.classes[class_name] = cls
@@ -119,14 +66,13 @@ class ASTBase(object):
 
     class_name = None
 
-    @property
     @abstractmethod
-    def params(self):
+    def make_params(self, *args, **kwargs):
         raise NotImplementedError
 
-    @abstractmethod
-    def inject(self, name, *args, **kwargs):
-        raise NotImplementedError
+    def __init__(self, inject, *args, **kwargs):
+        self.inject = inject
+        self.params = self.make_params(*args, **kwargs)
 
     def __add__(self, other):
         return self.inject('add', self, other)
@@ -161,13 +107,63 @@ class ASTBase(object):
         )
 
 
+_UNDEFINED_PARAM = object()
+
+
+def make_tuple_function(_callable, class_name='nametuple', exclude=None):
+    if not callable(_callable):
+        raise TypeError(
+            'Expected a callable, got {!r}'.format(_callable))
+
+    spec = getargspec(_callable)
+    if spec.varargs or spec.keywords:
+        raise TypeError(
+            'Invalid signatores in {!r}, '
+            'found varargs or keywords'.format(_callable))
+
+    tuple_args = spec.args
+    tuple_defaults = spec.defaults
+    if exclude:
+        # Eventually exclude some parameters
+        tuple_args = [a for a in tuple_args if a not in exclude]
+        if tuple_defaults:
+            # Eventually exclude some default value
+            tuple_defaults = [
+                d
+                for d, a in zip(spec.defaults, spec.args[-len(tuple_args):])
+                if a not in exclude]
+
+    # skip self parameter
+    tuple_class = namedtuple(class_name, tuple_args)
+    function_name = getattr(_callable, '__name__', class_name.lower())
+    function_code = (
+        'def {function_name}{signature}: return __make_tuple__({tuple_args})'.
+        format(
+            function_name=function_name,
+            signature=formatargspec(args=spec.args, defaults=spec.defaults),
+            tuple_args=', '.join(tuple_args)))
+
+    LOG.debug(
+        "Generated function code:\n"
+        "%s", function_code)
+
+    exec_scope = {'__make_tuple__': tuple_class}
+    exec(function_code, exec_scope)
+    return exec_scope[function_name]
+
+
+def make_tuple_method(method):
+    return  make_tuple_function(method, exclude='self')
+
+
 class Var(ASTBase):
     """
     """
 
     class_name = 'var'
 
-    def __init__(self, name):
+    @make_tuple_method
+    def make_params(self, name):
         pass
 
     def set_vars(self, values):
@@ -187,7 +183,8 @@ class Array(ASTBase):
 
     class_name = 'arr'
 
-    def __init__(self, value):
+    @make_tuple_method
+    def make_params(self, value):
         pass
 
 
@@ -197,6 +194,9 @@ arr = ast.arr
 class Add(ASTBase):
 
     class_name = 'add'
+
+    def make_params(self, *args):
+        return args
 
     def __add__(self, other):
         # optimize chain of additions with one single operation
