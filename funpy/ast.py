@@ -14,7 +14,7 @@ class ASTMeta(ABCMeta):
     classes = OrderedDict()
 
     def __new__(mcs, name, bases, members):
-        class_name = members['class_name']
+        class_name = members.get('class_name')
         if class_name:
             init_method = members.get('__init__')
             if init_method:
@@ -149,7 +149,7 @@ class ASTBase(object):
         return self.inject(self.class_name, *(self.params + (other,)))
 
     def prepend_param(self, other):
-        return self.inject(self.class_name, *(other, self.params))
+        return self.inject(self.class_name, *((other,) + self.params))
 
     def set_vars(self, values):
         return self.set_params(*[p.set_vars(values) for p in self.params])
@@ -201,19 +201,6 @@ class Add(ASTBase):
     def __add__(self, other):
         # optimize chain of additions with one single operation
         return self.append_param(other)
-
-
-class Add(ASTBase):
-
-    class_name = 'add'
-
-    def __add__(self, other):
-        # optimize chain of additions with one single operation
-        return self.append_param(other)
-
-    def __radd__(self, other):
-        # optimize chain of additions with one single operation
-        return self.prepend_param(other)
 
     def __radd__(self, other):
         # optimize chain of additions with one single operation
