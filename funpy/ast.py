@@ -111,10 +111,6 @@ _UNDEFINED_PARAM = object()
 
 
 def make_tuple_function(_callable, class_name='nametuple', exclude=None):
-    if not callable(_callable):
-        raise TypeError(
-            'Expected a callable, got {!r}'.format(_callable))
-
     spec = getargspec(_callable)
     if spec.varargs or spec.keywords:
         raise TypeError(
