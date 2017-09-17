@@ -3,7 +3,7 @@ from collections import namedtuple, OrderedDict
 from inspect import formatargspec, getargspec, getcallargs
 import logging
 
-from six import add_metaclass
+from six import add_metaclass, viewkeys
 
 
 LOG = logging.getLogger(__name__)
@@ -129,12 +129,15 @@ class ASTBase(object):
         raise NotImplementedError
 
     def __add__(self, other):
-        # LOG.debug('Add %r to %r (inject=%r)', self, other, self.inject)
         return self.inject('add', self, other)
 
+    def __radd__(self, other):
+        return self.inject('add', other, self)
+
     def __repr__(self):
-        return '{}({})'.format(
-            self.class_name, ', '.join(repr(p) for p in self.params))
+        return '{class_name}({params})'.format(
+            class_name=self.class_name,
+            params=', '.join(repr(p) for p in self.params))
 
     def set_params(self, *params):
         if params == self.params:
@@ -145,6 +148,9 @@ class ASTBase(object):
     def append_param(self, other):
         return self.inject(self.class_name, *(self.params + (other,)))
 
+    def prepend_param(self, other):
+        return self.inject(self.class_name, *(other, self.params))
+
     def set_vars(self, values):
         return self.set_params(*[p.set_vars(values) for p in self.params])
 
@@ -154,13 +160,14 @@ class ASTBase(object):
             self.params == getattr(other, 'params', None)
         )
 
+
 class Var(ASTBase):
     """
     """
 
     class_name = 'var'
 
-    def __init__(self, name, value=None):
+    def __init__(self, name):
         pass
 
     def set_vars(self, values):
@@ -169,6 +176,9 @@ class Var(ASTBase):
             return self.set_params(name, values[name])
         except KeyError:
             return self
+
+
+var = ast.var
 
 
 class Array(ASTBase):
@@ -181,6 +191,9 @@ class Array(ASTBase):
         pass
 
 
+arr = ast.arr
+
+
 class Add(ASTBase):
 
     class_name = 'add'
@@ -188,3 +201,26 @@ class Add(ASTBase):
     def __add__(self, other):
         # optimize chain of additions with one single operation
         return self.append_param(other)
+
+
+class Add(ASTBase):
+
+    class_name = 'add'
+
+    def __add__(self, other):
+        # optimize chain of additions with one single operation
+        return self.append_param(other)
+
+    def __radd__(self, other):
+        # optimize chain of additions with one single operation
+        return self.prepend_param(other)
+
+    def __radd__(self, other):
+        # optimize chain of additions with one single operation
+        return self.prepend_param(other)
+
+    def __repr__(self):
+        return ' + '.join(repr(p) for p in self.params)
+
+
+add = ast.add
