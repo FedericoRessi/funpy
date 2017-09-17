@@ -28,39 +28,30 @@ def func(_callable):
         spec.args, spec.defaults)
 
     # variables without default values
-    variables = (
-        [ast.var(name)
-         for name in _variables_without_values(spec.args, spec.defaults)] +
-        [ast.var(name, value)
-         for name, value in _variables_with_values(spec.args, spec.defaults)])
+    variables = [ast.var(name)for name in spec.args]
+
     LOG.debug(
         "Extracted variables:\n"
         "  %s",
         '\n  '.join(repr(v) for v in variables))
-    # signature = formatargspec(args=spec.args, defaults=spec.defaults)
-    return Func(_callable(*variables), _callable)
+    signature = formatargspec(args=spec.args, defaults=spec.defaults)
+    return Func(
+        name=_callable.__name__,
+        ast=_callable(*variables),
+        signature=signature,
+        callable=_callable
+    )
 
 
-def _variables_without_values(names, values):
-    if values:
-        return names[:-len(values)]
-    else:
-        return names
-
-
-def _variables_with_values(names, values):
-    if values:
-        return zip(names[-len(values):], values)
-    else:
-        return []
-
-
-class Func(namedtuple('Func', ['ast', 'signature'])):
+class Func(namedtuple('Func', ['name', 'ast', 'signature', 'callable'])):
 
     def __repr__(self):
-        return 'func({!r})'.format(self.ast)
+        return 'def {name}{signature}: return {ast}'.format(
+            name=self.name,
+            signature=self.signature,
+            ast=self.ast)
 
     def __call__(self, *args, **kwargs):
-        args = getcallargs(self.signature, *args, **kwargs)
+        args = getcallargs(self.callable, *args, **kwargs)
         raise NotImplementedError
         # return Func(self.ast.set_vars(args), self.signature)
