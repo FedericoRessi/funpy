@@ -85,20 +85,11 @@ class ASTBase(object):
             class_name=self.class_name,
             params=', '.join(repr(p) for p in self.params))
 
-    def set_params(self, *params):
-        if params == self.params:
-            return self
-        else:
-            return self.inject(self.class_name, *params)
-
     def append_param(self, other):
         return self.inject(self.class_name, *(self.params + (other,)))
 
     def prepend_param(self, other):
         return self.inject(self.class_name, *((other,) + self.params))
-
-    def set_vars(self, values):
-        return self.set_params(*[p.set_vars(values) for p in self.params])
 
     def __eq__(self, other):
         return (
@@ -161,13 +152,6 @@ class Var(ASTBase):
     @make_tuple_method
     def make_params(self, name):
         pass
-
-    def set_vars(self, values):
-        name = self.params.name
-        try:
-            return self.set_params(name, values[name])
-        except KeyError:
-            return self
 
 
 var = ast.var
